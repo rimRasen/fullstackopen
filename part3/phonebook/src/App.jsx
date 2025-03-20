@@ -5,9 +5,7 @@ import Notification from './components/Notification'
 import './index.css'
 import { useState, useEffect } from 'react'
 
-import axios from 'axios'
 import personService from './services/person'
-import person from './services/person'
 
 const App = () => {
   useEffect(() => { 
@@ -50,6 +48,14 @@ const App = () => {
         text: `Added ${returnedPerson.name}`,
         type: 'success'
       })
+    })
+    .catch(error => {
+      setNotificationMessage({
+        text: error.response.data.error || 'Failed to add person',
+        type: 'error'
+      })
+    })
+    .finally(() => {
       setTimeout(() => {
         setNotificationMessage(null)
       }, 5000)
@@ -83,7 +89,7 @@ const App = () => {
         type: 'success'
       })
     })
-    .catch(err => { 
+    .catch(() => { 
       setNotificationMessage({
         text: `Cannot update ${person.name}, They may have been removed from the server`,
         type: 'error'

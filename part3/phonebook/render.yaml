@@ -2,8 +2,11 @@ services:
   - type: web
     name: phonebook
     env: node
-    buildCommand: npm install && npm run build
+    buildCommand: |
+      npm install
+      npm run build
     startCommand: npm start
+    staticPublishPath: ./dist
     envVars:
       - key: NODE_ENV
         value: production
