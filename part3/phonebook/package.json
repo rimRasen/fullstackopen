@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "server": "json-server --port 3001 db.json",
     "build:ui": "if exist dist rmdir /s /q dist && npm run build",
-    "deploy:full": "npm run build:ui && git add . && git commit -m uibuild && git push"
+    "deploy:full": "npm run build:ui && git add . && git commit -m uibuild && git push -u origin master"
   },
   "dependencies": {
     "axios": "^1.8.1",
