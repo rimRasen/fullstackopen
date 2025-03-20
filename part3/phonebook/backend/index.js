@@ -1,10 +1,14 @@
 import express from 'express';
 import morgan from 'morgan';
-
+import cors from 'cors';
+import process from 'process';
 
 const app = express();
+
 app.use(express.json());
+app.use(express.static('dist'));
 app.use(morgan('tiny'));
+app.use(cors());
 
 morgan.token('body', (req) => {
   if (req.method === 'POST') { 
@@ -98,7 +102,7 @@ app.get('/info', (req, res) => {
   res.send(info);
 })
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => { 
     console.log(`Server running on port ${PORT}`);
 })
