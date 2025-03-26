@@ -4,7 +4,20 @@ import cors from 'cors';
 import process from 'process';
 import 'dotenv/config';
 import Person from '../models/person.js';
+import mongoose from 'mongoose';
 
+const url = process.env.MONGODB_URI;
+
+console.log('connecting to', url);
+
+mongoose.connect(url)
+ .then(() => {
+   console.log('connected to MongoDB');
+ })
+ .catch((error) => {
+    console.log('error connecting to MongoDB:', error.message);
+ });
+ 
 const app = express();
 
 app.use(express.json());
@@ -45,7 +58,7 @@ app.delete('/api/persons/:id', (req, res, next) => {
     .catch(error => next(error));
 });
 
-app.post('/api/persons', (req, res, next) => {
+app.post('/api/persons', async (req, res, next) => {
   const body = req.body;
 
   if (!body.name || !body.number) {
@@ -54,16 +67,26 @@ app.post('/api/persons', (req, res, next) => {
     });
   }
 
+  try { 
+    const existingPerson = await Person.findOne({ name: body.name} );
+
+    if (existingPerson) { 
+      const updatedPerson = await Person.findByIdAndUpdate(
+        existingPerson._id,
+        { name: body.name, number: body.number },
+        { new: true }
+      );
+      return res.json(updatedPerson);
+    }
   const person = new Person({
     name: body.name,
     number: body.number
   });
-
-  person.save()
-    .then(savedPerson => {
-      res.json(savedPerson);
-    })
-    .catch(error => next(error));
+  const savedPerson = await person.save();
+  res.json(savedPerson);
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.put('/api/persons/:id', (req, res, next) => {
