@@ -8,7 +8,7 @@
         "test-watch": "node --test --watch",
         "dev": "nodemon index.js",
         "start": "node index.js",
-        "deploy": "cd ../.. && git add . && git commit -m \"Update blog-list\" && git push origin main"
+        "deploy": "cd ../.. && git add . && git commit -m \"Update blog-list\" && git push origin master"
     },
     "keywords": [],
     "author": "",
