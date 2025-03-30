@@ -66,5 +66,14 @@ describe('total likes and favorite blog', () => {
         const result = listHelper.favoriteBlog(blogs)
         assert.strictEqual(result.title, "Canonical string reduction")
     })
+    test('most blogs', () => {
+        const result = listHelper.mostBlogs(blogs)
+        assert.strictEqual(result.author, "Robert C. Martin")
+    })
+    test('most likes', () => {
+        const result = listHelper.mostLikes(blogs)
+        assert.strictEqual(result.author, "Edsger W. Dijkstra")
+    })
+
 
   })
