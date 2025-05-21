@@ -1,9 +1,6 @@
-const { test, describe } = require('node:test')
-const assert = require('node:assert')
-const listHelper = require('../utils/list_helper')
+const Blog = require('../models/blog')
 
-describe('total likes and favorite blog', () => {
-    const blogs = [
+const initialBlogs = [
         {
           _id: "5a422a851b54a676234d17f7",
           title: "React patterns",
@@ -52,34 +49,21 @@ describe('total likes and favorite blog', () => {
           likes: 2,
           __v: 0
         }  
-      ]
-    
-    test('when list has only one blog, equals the likes of that', () => {
-        const result = listHelper.totalLikes([blogs[0]])
-        assert.strictEqual(result, 7)
-    })
-    test('when list is empty, equal to 0', () => {
-        const result = listHelper.totalLikes([])
-        assert.strictEqual(result, 0)
-    })
-    test("when list has multiple blogs, equals the sum of likes", () => {
-        const result = listHelper.totalLikes(blogs)
-        assert.strictEqual(result, 36)
-    })
-    test('favorite blog', () => {
-        const result = listHelper.favoriteBlog(blogs)
-        assert.strictEqual(result.title, "Canonical string reduction")
-    })
-    test('most blogs', () => {
-        const result = listHelper.mostBlogs(blogs)
-        console.log(result)
-        assert.deepStrictEqual(result, { author: "Robert C. Martin", blogs: 3 })
-    })
-    test('most likes', () => {
-        const result = listHelper.mostLikes(blogs)
-        console.log(result)
-        assert.deepStrictEqual(result, { author: "Edsger W. Dijkstra", likes: 17 })
-    })
+        ]
+const nonExistingId = async () => {
+    const blog = new Blog({ title: 'willremovethissoon', author: 'willremovethissoon', url: 'willremovethissoon' })
+    await blog.save()
+    await blog.deleteOne()
+    return blog._id.toString()
+}
 
+const blogsInDb = async () => {
+    const blogs = await Blog.find({})
+    return blogs.map(blog => blog.toJSON())
+}
 
-  })
+module.exports = { 
+    initialBlogs, 
+    nonExistingId, 
+    blogsInDb
+}
