@@ -1,8 +1,10 @@
 import './App.css'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Blog from './components/Blog'
 import loginService from './services/login'
 import blogService from './services/blogs'
+import Togglable from './components/Togglable'
+import BlogForm from './components/BlogForm'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
@@ -50,80 +52,33 @@ const App = () => {
     blogService.setToken(null)
   }
 
-  const newBlogForm = async (event) => {
-    event.preventDefault()
-    try { 
-      const newBlog = { 
-        title: newTitle,
-        author: newAuthor,
-        url: newUrl
-      }
+  const blogFormRef = useRef()
 
-      const returnedBlog = await blogService.create(newBlog)
+  const createBlog = async (blogObject) => {
+    try {
+      const returnedBlog = await blogService.create(blogObject)
       setBlogs(blogs.concat(returnedBlog))
-      setNewTitle('')
-      setNewAuthor('')
-      setNewUrl('')
-      setShowForm(false)
       setNotification(`A new blog ${returnedBlog.title} by ${returnedBlog.author} added`)
       setTimeout(() => {
         setNotification(null)
       }, 5000)
-    }
-    catch (exception) {
+    } catch (exception) {
       setErrorMessage('Error creating blog')
       setTimeout(() => {
         setErrorMessage(null)
       }, 5000)
     }
   }
-  const blogForm = () => (
-    <div>
-      <h2>Welcome, {user.name}</h2>
-      <button onClick={handleLogout}>logout</button>
-      <h2>Create new blog</h2>
-      <button onClick={() => setShowForm(!showForm)}>
-        {showForm ? 'Cancel' : 'Create Blog'}
-      </button>
-      {showForm && (
-        <form onSubmit={newBlogForm}>
-          <div>
-            Title: <input value={newTitle} onChange={({ target }) => setNewTitle(target.value)} />
-          </div>
-          <div>
-            Author: <input value={newAuthor} onChange={({ target }) => setNewAuthor(target.value)} />
-          </div>
-          <div>
-            URL: <input value={newUrl} onChange={({ target }) => setNewUrl(target.value)} />
-          </div>
-          <button type="submit">Submit</button>
-        </form>
-      )}
-      <p>Your Blogs</p>
-      {[...blogs]
-      .sort((a, b) => b.likes - a.likes)
-      .map(blog =>
-        <Blog 
-          key = {blog.id}
-          blog = {blog}
-          expanded = {expandedBlog === blog.id}
-          toggleBlog = {() => setExpandedBlog(expandedBlog === blog.id ? null : blog.id)}
-          onLike = {() => handleLike(blog)}
-          onDelete = {() => handleDelete(blog)}
-        />
-      )}
-    </div>
-  )
 
   useEffect(() => {
     blogService.getAll().then(blogs =>
       setBlogs( blogs )
-    )  
+    )
   }, [])
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
-    if (loggedUserJSON) { 
+    if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON)
       setUser(user)
       blogService.setToken(user.token)
@@ -132,7 +87,7 @@ const App = () => {
 
   const handleLogin = async (event) => {
     event.preventDefault()
-    try { 
+    try {
       const user = await loginService.login({
         username, password
       })
@@ -153,7 +108,7 @@ const App = () => {
     }
   }
 
-  const handleLike = async (blog) => { 
+  const handleLike = async (blog) => {
     const updatedBlog = {
       user: typeof blog.user === 'object' ? blog.user.id || blog.user._id : blog.user,
       likes: blog.likes + 1,
@@ -162,14 +117,13 @@ const App = () => {
       url: blog.url
     }
 
-    try { 
+    try {
       const returnedBlog = await blogService.update(blog.id, updatedBlog)
 
       if (typeof blog.user === 'object') {
         returnedBlog.user = blog.user
       }
       setBlogs(blogs.map(b => b.id !== blog.id ? b : returnedBlog))
-      
     } catch (exception) {
       setErrorMessage('Error liking blog')
       setTimeout(() => {
@@ -180,28 +134,40 @@ const App = () => {
 
   const handleDelete = async (blog) => {
     if (window.confirm(`Remove blog ${blog.title} ${blog.author}?`)) {
-     try {
-      await blogService.remove(blog.id)
-      setBlogs(blogs.filter(b => b.id !== blog.id))
-      setNotification(`Blog ${blog.title} ${blog.author} removed`)
-      setTimeout(() => {
-        setNotification(null)
-      }, 5000)
-    } catch (error) { 
-      setErrorMessage('Error deleting blog')
-      setTimeout(() => {
-        setErrorMessage(null)
-      }, 5000)
+      try {
+        await blogService.remove(blog.id)
+        setBlogs(blogs.filter(b => b.id !== blog.id))
+        setNotification(`Blog ${blog.title} ${blog.author} removed`)
+        setTimeout(() => {
+          setNotification(null)
+        }, 5000)
+      } catch (error) {
+        setErrorMessage('Error deleting blog')
+        setTimeout(() => {
+          setErrorMessage(null)
+        }, 5000)
+      }
     }
-   }
   }
- 
+
   return (
     <div>
       <h1>Blogs</h1>
       {notification && <div className="notification">{notification}</div>}
       {errorMessage && <div className="error">{errorMessage}</div>}
-      {user === null ? loginForm() : blogForm()}
+      {user === null ? loginForm() : (
+        <BlogForm
+          user={user}
+          handleLogout={handleLogout}
+          blogFormRef={blogFormRef}
+          createBlog={createBlog}
+          blogs={blogs}
+          expandedBlog={expandedBlog}
+          setExpandedBlog={setExpandedBlog}
+          handleLike={handleLike}
+          handleDelete={handleDelete}
+        />
+      )}
     </div>
   )
 }
